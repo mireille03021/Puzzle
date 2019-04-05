@@ -101,6 +101,7 @@
                 }
                 checkIsClick();
                 $("#block0").hide();
+                startGame = false;
             }
 
             init();
@@ -113,8 +114,9 @@
                 } else if (!confirm("要重新開始嗎?")) {
                     return;
                 }
+                // reset();
+                init();
                 setOnClick();
-                reset();
                 firstGame = false;
                 var go = $("#randomTimes").val();
                 console.log(go);
