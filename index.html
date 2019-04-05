@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="stylesheets/stylesheet.css">
+    <link href="stylesheets/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link href="stylesheets/dashboard.css" rel="stylesheet">
+    <title>Puzzle</title>
+</head>
+
+<body>
+    <div class="row mx-auto">
+        <div class="button-block mb-5 col-12 row">
+            <button type="button" class="btn btn-secondary col-1 mr-2" id="start">開始</button>
+            <button type="button" class="btn btn-secondary col-1 mr-2" id="reset">復原</button>
+            <div class="input-group col-2">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">隨機打亂次數 :</span>
+                </div>
+                <input type="text" class="form-control number h-100" placeholder="0" aria-label="Username" aria-describedby="basic-addon1" id="randomTimes">
+            </div>
+            <div class="dropdown col-1">
+                <button class="btn btn-secondary dropdown-toggle h-100" type="button" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      遊戲大小
+                </button>
+                <div class="dropdown-menu" aria-labelledby="dropdownMenu2">
+                    <button class="dropdown-item size" type="button" value="2">2x2</button>
+                    <button class="dropdown-item size" type="button" value="3">3x3</button>
+                    <button class="dropdown-item size" type="button" value="4">4x4</button>
+                    <button class="dropdown-item size" type="button" value="5">5x5</button>
+                </div>
+            </div>
+        </div>
+
+        <ul id="block" class="list-unstyled ml-4">
+            <li>
+                <div class="image" style="background-position: 0 0;"></div>
+            </li>
+        </ul>
+        <div>
+            <img src="./cat.png" alt="" style="width:600px;height:600px;">
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="jquery-3.3.1.js"></script>
+    <script>
+        $(function() {
+            var arraySize = 4;
+            // $("#block").css('width', 150 * arraySize);
+            // $("#block").css('height', 150 * arraySize);
+            // maxW = $("#block").width(); //無單位的寬
+            // maxH = $("#block").height(); //無單位的高
+
+            function init() {
+                $("#block").html("");
+                puzzles = new Array(Math.pow(arraySize, 2));
+                originPuzzles = new Array(Math.pow(arraySize, 2));
+                html = "<div class=\"image\"style=\"background-position: 0 0;\"></div>";
+                leftArrowKey = 0;
+                rightArrowKey = 0;
+                upArrowKey = 0;
+                downArrowKey = 0;
+                firstGame = true;
+                for (var i = 0; i < puzzles.length; i++) {
+                    var row = Math.floor(i % arraySize) * -600 / arraySize;
+                    var column = Math.floor(i / arraySize) * -600 / arraySize;
+                    if (row == -600) {
+                        row = 0;
+                    }
+                    puzzles[i] = {
+                        "id": "block" + i,
+                        "left": (row * -1),
+                        "top": (column * -1)
+                    };
+                    originPuzzles[i] = {
+                        "id": "block" + i,
+                        "left": (row * -1),
+                        "top": (column * -1)
+                    }
+                    $("<li></li>")
+                        .attr('id', puzzles[i]["id"])
+                        .append($("<div></div>")
+                            .addClass("image")
+                            .css('background-position', row + "px " + column + "px"))
+                        .css('width', 600 / arraySize + "px")
+                        .css('height', 600 / arraySize + "px")
+                        .css('top', puzzles[i]["top"] + "px")
+                        .css('left', puzzles[i]["left"] + "px")
+                        .val(i) //為何要加上val? 因為我需要知道我的按鈕對應到哪個陣列的index，省下swap需要用搜尋法的時間，不然當我按下按鈕時，我的背後程式根本不知道是哪一個按鈕
+                        .appendTo("#block");
+
+                }
+                checkIsClick();
+                $("#block0").hide();
+            }
+
+            init();
+
+            $('#start').on('click', start);
+
+            function start() {
+                if (firstGame == true) {
+                    alert("開始!");
+                } else if (!confirm("要重新開始嗎?")) {
+                    return;
+                }
+                setOnClick();
+                reset();
+                firstGame = false;
+                var go = $("#randomTimes").val();
+                console.log(go);
+                for (var i = 0; i < go; i++) {
+                    var jump = Math.floor(Math.random() * 4);
+                    console.log(jump);
+                    if (jump == 0) {
+                        $('#block' + leftArrowKey).click();
+                    } else if (jump == 1) {
+                        $('#block' + rightArrowKey).click();
+                    } else if (jump == 2) {
+                        $('#block' + upArrowKey).click();
+                    } else if (jump == 3) {
+                        $('#block' + downArrowKey).click();
+                    }
+                }
+                startGame = true; //必須寫在結尾
+            }
+
+
+
+            $('#reset').on('click', reset);
+
+            function reset() {
+                for (var i = 0; i < puzzles.length; i++) {
+                    var row = Math.floor(i % arraySize) * -600 / arraySize;
+                    var column = Math.floor(i / arraySize) * -600 / arraySize;
+                    if (row == -600) {
+                        row = 0;
+                    }
+                    puzzles[i] = { //建立16個物件
+                        "id": "block" + i,
+                        "left": (row * -1),
+                        "top": (column * -1)
+                    };
+                    $('#block' + i).css('top', puzzles[i].top);
+                    $('#block' + i).css('left', puzzles[i].left)
+                }
+                checkIsClick();
+                $("#block0").hide();
+                startGame = false;
+            }
+
+            function checkIsClick() { //讓各自的按鈕判斷自己是否周圍有空白格的存在
+                for (var i = 0; i < puzzles.length; i++) {
+
+                    if (puzzles[i]["id"] != "block0") { //初始化各個按鈕是否可點擊
+                        puzzles[i]["buttonClick"] = isClick(puzzles, i);
+                    }
+                    // console.log(puzzles[i]); //查看物件資訊
+                    // console.log(puzzles[i]["buttonClick"]); //確認各自是否可點擊
+                }
+            }
+
+            function isClick(puzzles, index) {
+                var puzzleTop = puzzles[index]["top"];
+                var puzzleLeft = puzzles[index]["left"];
+                var emptyTop = puzzles[0]["top"];
+                var emptyLeft = puzzles[0]["left"];
+                if (puzzleTop == emptyTop && puzzleLeft == emptyLeft - 600 / arraySize) {
+                    leftArrowKey = index;
+                    return true;
+                } else if (puzzleTop == emptyTop && puzzleLeft == emptyLeft + 600 / arraySize) {
+                    rightArrowKey = index;
+                    return true;
+                } else if (puzzleLeft == emptyLeft && puzzleTop == emptyTop - 600 / arraySize) {
+                    upArrowKey = index;
+                    return true;
+                } else if (puzzleLeft == emptyLeft && puzzleTop == emptyTop + 600 / arraySize) {
+                    downArrowKey = index;
+                    return true;
+                }
+                return false;
+            }
+
+            function swapBlock() { //交換
+                //若要加動畫，必須加在這
+                //目前暫時無動畫
+                // console.log(this.value); //取得index
+                if (puzzles[this.value]["buttonClick"]) {
+                    //----顯示的交換----
+                    $("#block0").css('left', puzzles[this.value]["left"] + "px");
+                    $("#block0").css('top', puzzles[this.value]["top"] + "px");
+                    $("#block" + this.value).css('left', puzzles[0]["left"] + "px");
+                    $("#block" + this.value).css('top', puzzles[0]["top"] + "px");
+                    //----資料的交換----
+                    var tmp = {
+                        "left": 0,
+                        "top": 0
+                    }
+                    tmp.left = puzzles[this.value].left;
+                    tmp.top = puzzles[this.value].top;
+                    puzzles[this.value].left = puzzles[0].left;
+                    puzzles[this.value].top = puzzles[0].top;
+                    puzzles[0].left = tmp.left;
+                    puzzles[0].top = tmp.top;
+                    // console.log(puzzles[this.value].left);
+                    // console.log(puzzles[this.value].top);
+                    // console.log(puzzles[0].left);
+                    // console.log(puzzles[0].top);
+                    checkIsClick();
+                }
+                if (isEndGame()) {
+                    reset();
+                    $("#block0").show();
+                    setTimeout(function() {
+                        alert('恭喜過關');
+                    }, 1);
+                    for (var i = 1; i < puzzles.length; i++) { //空白格不需要綁事件上去,畢竟本來就不給點擊
+                        $('#block' + i).off('click');
+                    }
+                }
+            }
+
+            function isEndGame() {
+                if (puzzles[0].top == 0 && puzzles[0].left == 0 && startGame == true) {
+                    for (var i = 0; i < puzzles.length; i++) {
+                        if (puzzles[i].left != originPuzzles[i].left || puzzles[i].top != originPuzzles[i].top) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+            }
+
+            function setOnClick() {
+                for (var i = 1; i < puzzles.length; i++) { //空白格不需要綁事件上去,畢竟本來就不給點擊
+                    $('#block' + i).on('click', swapBlock);
+                }
+            }
+
+            $(".size").on('click', setSize);
+
+            function setSize() {
+                arraySize = this.value;
+                // $("#block").css('width', 150 * arraySize);
+                // $("#block").css('height', 150 * arraySize);
+                // maxW = $("#block").width(); //無單位的寬
+                // maxH = $("#block").height(); //無單位的高
+                $("li").css('width', 600 / arraySize + "px");
+                $("li").css('Height', 600 / arraySize + "px");
+                $("#block").html("");
+                init();
+            }
+
+            document.onkeyup = function clickArrowKey(event) {
+                if (event.key == "ArrowLeft" && puzzles[0].left > 0) {
+                    $('#block' + leftArrowKey).click();
+                }
+                if (event.key == "ArrowRight" && puzzles[0].left < 450) {
+                    $('#block' + rightArrowKey).click();
+                }
+                if (event.key == "ArrowUp" && puzzles[0].top > 0) {
+                    $('#block' + upArrowKey).click();
+                }
+                if (event.key == "ArrowDown" && puzzles[0].top < 450) {
+                    $('#block' + downArrowKey).click();
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
