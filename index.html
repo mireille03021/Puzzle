@@ -53,10 +53,6 @@
     <script>
         $(function() {
             var arraySize = 4;
-            // $("#block").css('width', 150 * arraySize);
-            // $("#block").css('height', 150 * arraySize);
-            // maxW = $("#block").width(); //無單位的寬
-            // maxH = $("#block").height(); //無單位的高
 
             function init() {
                 $("#block").html("");
@@ -145,7 +141,7 @@
                     if (row == -600) {
                         row = 0;
                     }
-                    puzzles[i] = { //建立16個物件
+                    puzzles[i] = {
                         "id": "block" + i,
                         "left": (row * -1),
                         "top": (column * -1)
@@ -191,15 +187,17 @@
             }
 
             function swapBlock() { //交換
-                //若要加動畫，必須加在這
-                //目前暫時無動畫
-                // console.log(this.value); //取得index
                 if (puzzles[this.value]["buttonClick"]) {
                     //----顯示的交換----
                     $("#block0").css('left', puzzles[this.value]["left"] + "px");
                     $("#block0").css('top', puzzles[this.value]["top"] + "px");
-                    $("#block" + this.value).css('left', puzzles[0]["left"] + "px");
-                    $("#block" + this.value).css('top', puzzles[0]["top"] + "px");
+                    $("#block" + this.value).animate(
+                        {
+                            left:puzzles[0]["left"] + "px",
+                            top:puzzles[0]["top"] + "px"
+                        },500);
+                    // $("#block" + this.value).css('left', puzzles[0]["left"] + "px");
+                    // $("#block" + this.value).css('top', puzzles[0]["top"] + "px");
                     //----資料的交換----
                     var tmp = {
                         "left": 0,
@@ -211,10 +209,6 @@
                     puzzles[this.value].top = puzzles[0].top;
                     puzzles[0].left = tmp.left;
                     puzzles[0].top = tmp.top;
-                    // console.log(puzzles[this.value].left);
-                    // console.log(puzzles[this.value].top);
-                    // console.log(puzzles[0].left);
-                    // console.log(puzzles[0].top);
                     checkIsClick();
                 }
                 if (isEndGame()) {
@@ -241,7 +235,7 @@
             }
 
             function setOnClick() {
-                for (var i = 1; i < puzzles.length; i++) { //空白格不需要綁事件上去,畢竟本來就不給點擊
+                for (var i = 1; i < puzzles.length; i++) {
                     $('#block' + i).on('click', swapBlock);
                 }
             }
@@ -250,10 +244,6 @@
 
             function setSize() {
                 arraySize = this.value;
-                // $("#block").css('width', 150 * arraySize);
-                // $("#block").css('height', 150 * arraySize);
-                // maxW = $("#block").width(); //無單位的寬
-                // maxH = $("#block").height(); //無單位的高
                 $("li").css('width', 600 / arraySize + "px");
                 $("li").css('Height', 600 / arraySize + "px");
                 $("#block").html("");
